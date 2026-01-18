@@ -8,7 +8,7 @@
 body {
   font-family: Arial;
   margin:0; padding:0;
-  background: url('fundo.png') no-repeat center center fixed;
+  background: url('/static/fundo.png') no-repeat center center fixed;
   background-size: cover;
   overflow-x: hidden;
   font-size: 40px; 
@@ -211,7 +211,7 @@ h1 {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: url('fundo.png') no-repeat center center fixed;
+  background: url('/static/fundo.png') no-repeat center center fixed;
   background-size: cover;
   display: none;
   flex-direction: column;
@@ -271,7 +271,7 @@ h1 {
 <div class="carrinho">
   <div class="carrinho-esquerda">
     <div class="carrinho-topo">
-      <img src="carrinho_novo.png">
+      <img src="/static/carrinho_novo.png">
   <div id="itensCarrinho"></div>
     </div>
     <div class="totalCarrinho">Total: R$ <span id="total">0.00</span></div>
@@ -307,8 +307,8 @@ h1 {
 </div>
 
 <script>
-const ID_MAQUINA = 'refrigerante';
-const API_BASE = 'https://futuro-b32e6f57c219.herokuapp.com';
+const ID_MAQUINA = 'tabacaria';
+const API_BASE = 'https://maquina-teste-dcd05bb317d1.herokuapp.com/';
 let produtos = [];
 let carrinho = {};
 let timerLimpeza = null;
@@ -337,13 +337,11 @@ function mostrarProdutos() {
 
     // ✅ Caminho correto da imagem (Cloudinary / uploads)
     let imgPath = "";
-    if (p.img && p.img.startsWith("http")) {
-      imgPath = p.img;
-    } else if (p.img && p.img.includes("/")) {
-      imgPath = `${API_BASE}/static/uploads/${p.img}`;
-    } else if (p.img) {
-      imgPath = `${API_BASE}/static/uploads/${ID_MAQUINA}/${p.img}`;
-    }
+
+if (p.img_url) {
+  imgPath = `${API_BASE}static/uploads/${ID_MAQUINA}/${p.img_url}`;
+}
+
 
     el.innerHTML = `
       <img src="${imgPath}" alt="${p.nome}" 
@@ -581,7 +579,7 @@ document.getElementById('total').textContent = '0.00';
 
     tela.style.display = "flex";
     texto.innerText = "✅ Pedido enviado! Aperte o botão verde da maquininha para continuar.";
-    img.src = "maquininha.png";
+    img.src = "/static/maquininha.png";
     img.style.display = "block";
 
     // Sai automaticamente após 15 segundos para o catálogo/tela de espera
@@ -635,9 +633,7 @@ async function entrarTelaRepouso() {
     const lista = [...produtos, ...produtos];
     lista.forEach(p => {
       const img = document.createElement("img");
-      img.src = p.img && p.img.startsWith("http")
-        ? p.img
-        : `${API_BASE}/static/uploads/${ID_MAQUINA}/${p.img}`;
+      img.src = `${API_BASE}static/uploads/${ID_MAQUINA}/${p.img_url}`;
       img.alt = p.nome;
       img.onerror = () => (img.style.display = "none");
       slides.appendChild(img);
