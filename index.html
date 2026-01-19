@@ -338,13 +338,12 @@ function mostrarProdutos() {
     // ✅ Caminho correto da imagem (Cloudinary / uploads)
     let imgPath = "";
 
-if (p.img_url) {
-  imgPath = `${API_BASE}static/uploads/${ID_MAQUINA}/${p.img_url}`;
+if (p.img) {
+  imgPath = `/static/uploads/${ID_MAQUINA}/${p.img}`;
 }
 
-
     el.innerHTML = `
-      <img src="${imgPath}" alt="${p.nome}" 
+      <img src="${imgPath}" alt="${p.nome}">
            onerror="this.style.display='none'" 
            style="width:220px;height:220px;object-fit:contain;border-radius:15px;">
       <div><b>${p.nome}</b><br>R$ ${p.preco.toFixed(2)}<br>Estoque:
