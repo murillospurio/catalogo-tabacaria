@@ -335,19 +335,26 @@ function mostrarProdutos() {
     const el = document.createElement('div');
     el.className = 'produto';
 
-    // ✅ Caminho correto da imagem (Cloudinary / uploads)
+    // 🔥 AGORA COMPATÍVEL COM CLOUDINARY E ANTIGOS
     let imgPath = "";
-    if (p.img && p.img.startsWith("http")) {
+
+    if (p.img_url && p.img_url.startsWith("http")) {
+      // Produtos novos (Cloudinary)
+      imgPath = p.img_url;
+
+    } else if (p.img && p.img.startsWith("http")) {
+      // Caso antigo já com URL completa
       imgPath = p.img;
-    } else if (p.img && p.img.includes("/")) {
-      imgPath = `${API_BASE}/static/uploads/${p.img}`;
+
     } else if (p.img) {
+      // Caso muito antigo salvo localmente
       imgPath = `${API_BASE}/static/uploads/${ID_MAQUINA}/${p.img}`;
     }
 
     el.innerHTML = `
-      <img src="${imgPath}" alt="${p.nome}" 
-           onerror="this.style.display='none'" 
+      <img src="${imgPath}" 
+           alt="${p.nome}" 
+           onerror="this.src='sem_imagem.png'" 
            style="width:220px;height:220px;object-fit:contain;border-radius:15px;">
       <div><b>${p.nome}</b><br>R$ ${p.preco.toFixed(2)}<br>Estoque:
       <span id="estoque-${p.id}">${p.estoque}</span></div>
@@ -356,6 +363,7 @@ function mostrarProdutos() {
         <span id="qtd-${p.id}">0</span>
         <button onclick="alterarQuantidade(${p.id},1)">+</button>
       </div>`;
+      
     div.appendChild(el);
   });
 
