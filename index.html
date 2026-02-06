@@ -664,23 +664,43 @@ async function entrarTelaRepouso() {
     const resp = await fetch(`${API_BASE}/catalogo/${ID_MAQUINA}`);
     const produtos = await resp.json();
 
-    // 🔹 Cria imagens duplicadas para efeito infinito
+    // 🔹 DUPLICA para loop infinito
     const lista = [...produtos, ...produtos];
+
     lista.forEach(p => {
       const img = document.createElement("img");
-      img.src = p.img && p.img.startsWith("http")
-        ? p.img
-        : `${API_BASE}/static/uploads/${ID_MAQUINA}/${p.img}`;
+
+      // Compatível com Cloudinary
+      img.src = p.img_url || p.img || "";
       img.alt = p.nome;
       img.onerror = () => (img.style.display = "none");
+
       slides.appendChild(img);
     });
 
-    // 🔹 Inicia a animação suave
-    slides.style.animation = "rolarContinuo 40s linear infinite";
+    iniciarRolagemSuave(); // inicia animação dinâmica
+
   } catch (err) {
     console.error("Erro ao carregar carrossel:", err);
   }
+}
+
+function iniciarRolagemSuave() {
+  const slides = document.getElementById("slidesEspera");
+
+  let pos = 0;
+
+  function animar() {
+    pos += 0.3; // velocidade real (pixels por frame)
+
+    // Quando metade passou, volta pro início (loop perfeito)
+    if (pos >= slides.scrollWidth / 2) pos = 0;
+
+    slides.style.transform = `translateX(-${pos}px)`;
+    requestAnimationFrame(animar);
+  }
+
+  requestAnimationFrame(animar);
 }
 
 function moverCarrossel(qtd) {
