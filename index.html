@@ -524,6 +524,11 @@ function fecharOverlay(){
   pagamentoOpcoes.style.display = 'none';
 }
 
+function abrirMercadoPago(valor, descricao) {
+  const url = `mercadopago://pay?amount=${valor}&description=${encodeURIComponent(descricao)}`;
+  window.location.href = url;
+}
+
 /* === confirmar pedido === */
 async function confirmarComForma(forma) {
   const items = [];
@@ -613,9 +618,14 @@ document.getElementById('itensCarrinho').innerHTML = 'Vazio';
 document.getElementById('total').textContent = '0.00';
 
     tela.style.display = "flex";
-    texto.innerText = "✅ Pedido enviado! Aperte o botão verde da maquininha para continuar.";
+    texto.innerText = "✅ Pedido enviado! Abrindo pagamento";
     img.src = "maquininha.png";
     img.style.display = "block";
+
+    // 🔵 abre o Mercado Pago
+    setTimeout(() => {
+      abrirMercadoPago(total.toFixed(2), payload.order_id);
+    }, 1000);
 
     // Sai automaticamente após 15 segundos para o catálogo/tela de espera
     setTimeout(() => {
