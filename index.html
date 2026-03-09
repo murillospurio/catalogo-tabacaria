@@ -525,8 +525,13 @@ function fecharOverlay(){
 }
 
 function abrirMercadoPago(valor, descricao) {
-  const url = `mercadopago://pay?amount=${valor}&description=${encodeURIComponent(descricao)}`;
+
+  const valorFormatado = parseFloat(valor).toFixed(2);
+
+  const url = `mercadopago://point/payment?amount=${valorFormatado}&description=${encodeURIComponent(descricao)}`;
+
   window.location.href = url;
+
 }
 
 /* === confirmar pedido === */
