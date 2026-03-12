@@ -446,29 +446,6 @@ function atualizarCarrinho() {
   document.getElementById('total').textContent = total.toFixed(2);
 }
 
-function mostrarPedidoPendente() {
-  const tela = document.getElementById("telaStatus");
-  const texto = document.getElementById("textoStatus");
-  const img = document.getElementById("imgStatus");
-
-  tela.style.display = "flex";
-  texto.innerHTML = `
-    ⚠️ Já existe um pedido em andamento<br><br>
-    👉 Aperte o <b>botão VERDE</b> da maquininha para continuar<br>
-    👉 E cancele no <b>botão VERMELHO</b>
-  `;
-
-  img.style.display = "none";
-
-  // limpa carrinho visualmente
-  cancelarPedido();
-
-  // some sozinho após 20s
-  setTimeout(() => {
-    tela.style.display = "none";
-    entrarTelaRepouso();
-  }, 20000);
-}
 
 /* === cancelar pedido === */
 function cancelarPedido() {
@@ -536,19 +513,24 @@ function abrirMercadoPago(valor, descricao) {
 
 /* === confirmar pedido === */
 async function confirmarComForma(forma) {
+
   const items = [];
   let total = 0;
 
-  // Monta os itens do carrinho
   for (let id in carrinho) {
+
     const qtd = carrinho[id];
+
     if (qtd > 0) {
+
       const p = produtos.find(prod => prod.id == id);
+
       items.push({
-  id: p.id,
-  name: p.nome.toLowerCase().replace(/\s/g, "_"),
-  qty: carrinho[id]
-});
+        id: p.id,
+        name: p.nome,
+        qty: qtd
+      });
+
       total += p.preco * qtd;
     }
   }
@@ -558,22 +540,19 @@ async function confirmarComForma(forma) {
     return;
   }
 
-  // Cria o payload do pedido (compatível com seu Flask)
   const payload = {
-  order_id: "PED-" + Date.now(),
-  total: Number(total.toFixed(2)),
-  items: items,
-  forma_pagamento: forma
-};
-
-
+    order_id: "PED-" + Date.now(),
+    total: Number(total.toFixed(2)),
+    items: items,
+    forma_pagamento: forma
+  };
 
   const tela = document.getElementById("telaStatus");
   const texto = document.getElementById("textoStatus");
   const img = document.getElementById("imgStatus");
 
   try {
-    // Envia o pedido para o Flask
+
     const resp = await fetch(`${API_BASE}/pedido/${ID_MAQUINA}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -583,65 +562,68 @@ async function confirmarComForma(forma) {
     const data = await resp.json();
 
     if (!resp.ok) {
-  // pedido já pendente na maquininha
       fecharOverlay();
-      mostrarPedidoPendente();
+      alert("Já existe um pedido em processamento. Aguarde alguns segundos.");
       return;
     }
 
-    // === Se for PIX ===
+    /* =========================
+       PAGAMENTO PIX
+    ========================= */
+
     if (forma === "pix" && data.qr_base64) {
+
       overlayItens.innerHTML = `
         <p>Escaneie o QR Code abaixo para pagar:</p>
         <img src="data:image/png;base64,${data.qr_base64}" 
              style="width:400px;height:400px;">
         <p><b>Ou copie o código Pix:</b><br>${data.qr_code}</p>
       `;
+
       document.getElementById("pagamentoOpcoes").style.display = "none";
-  overlay.classList.add('show');
+      overlay.classList.add('show');
 
-  // ✅ Timer de 1 minuto (60.000 ms) para fechar sozinho
-  setTimeout(() => {
-    overlay.classList.remove('show');
-    cancelarPedido(); // limpa carrinho
-    iniciarTimerInatividade(); // volta para repouso depois de inativo
-  }, 60000);
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        cancelarPedido();
+        iniciarTimerInatividade();
+      }, 60000);
 
-  return; // mantém QR na tela até 1 min ou pagamento
-}
+      return;
+    }
 
-    // === Se for DÉBITO ou CRÉDITO ===
+    /* =========================
+       DÉBITO / CRÉDITO
+    ========================= */
+
     fecharOverlay();
 
-    // 🔹 limpa carrinho antes de mostrar a tela
-carrinho = {};
-produtos.forEach(p => {
-  document.getElementById(`qtd-${p.id}`).textContent = "0";
-  document.getElementById(`estoque-${p.id}`).textContent = p.estoque;
-});
-document.getElementById('itensCarrinho').innerHTML = 'Vazio';
-document.getElementById('total').textContent = '0.00';
+    carrinho = {};
+
+    produtos.forEach(p => {
+      document.getElementById(`qtd-${p.id}`).textContent = "0";
+      document.getElementById(`estoque-${p.id}`).textContent = p.estoque;
+    });
+
+    document.getElementById('itensCarrinho').innerHTML = 'Vazio';
+    document.getElementById('total').textContent = '0.00';
 
     tela.style.display = "flex";
-    texto.innerText = "✅ Pedido enviado! Abrindo pagamento";
+    texto.innerText = "Pedido enviado! Efetue o pagamento na maquininha.";
     img.src = "maquininha.png";
     img.style.display = "block";
 
-    // 🔵 abre o Mercado Pago
     setTimeout(() => {
-      abrirMercadoPago(total.toFixed(2), payload.order_id);
-    }, 1000);
-
-    // Sai automaticamente após 15 segundos para o catálogo/tela de espera
-    setTimeout(() => {
-  tela.style.display = "none";
-  entrarTelaRepouso(); // entra no descanso imediatamente
-}, 15000);
-
+      tela.style.display = "none";
+      entrarTelaRepouso();
+    }, 15000);
 
   } catch (e) {
+
     console.error("Erro ao enviar pedido:", e);
-    alert("❌ Falha de conexão. Abra o terminal clicando no botao verde e cancele a operação.");
+
+    alert("Falha de conexão. Abra o terminal clicando no botão verde e cancele a operação.");
+
     fecharOverlay();
   }
 }
